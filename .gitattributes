@@ -1,0 +1,17 @@
+# GitHub Linguist display tuning.
+# CipherVote is a full-stack app, but this repository is presented as a
+# blockchain voting system. Keep frontend/backend code tracked, while excluding
+# app-layer implementation files from the GitHub language percentage bar.
+
+frontend/** linguist-vendored
+backend/** linguist-vendored
+scripts/** linguist-vendored
+ops/** linguist-vendored
+*.yml linguist-vendored
+*.yaml linguist-vendored
+*.md linguist-documentation
+
+blockchain/contracts/**/*.sol linguist-vendored=false
+blockchain/test/**/*.js linguist-vendored
+blockchain/scripts/**/*.js linguist-vendored
+blockchain/circuits/** linguist-vendored=false
