@@ -1,0 +1,14 @@
+{
+  "name":"ciphervote-blockchain","version":"1.0.0",
+  "scripts":{
+    "compile":"npx hardhat compile","test":"npx hardhat test","check":"npm run compile && npm run circuit:check","audit:security":"npm audit --audit-level=high","slither":"slither . --filter-paths node_modules",
+    "node":"npx hardhat node",
+    "deploy:local":"npx hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia":"npx hardhat run scripts/deploy.js --network sepolia",
+    "zkp:activate":"npx hardhat run scripts/deployZKP.js --network localhost",
+    "zkp:proof":"node scripts/generateVoteProof.js",
+    "circuit:setup":"bash circuits/setup.sh","circuit:vk":"node circuits/extract_vk.js","circuit:check":"node scripts/check-circuit.js && node scripts/check-public-input-order.js"
+  },
+  "devDependencies":{"@nomicfoundation/hardhat-toolbox":"^4.0.0","hardhat":"^2.22.0","chai":"^4.3.10"},
+  "dependencies":{"@openzeppelin/contracts":"5.0.0","circomlibjs":"^0.1.7","dotenv":"^16.4.0","ethers":"^6.11.0","snarkjs":"^0.7.3"}
+}

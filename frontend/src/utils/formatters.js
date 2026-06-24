@@ -1,0 +1,14 @@
+import{format,formatDistanceToNow,isAfter}from"date-fns";
+export const formatAddress=(a,chars=4)=>a?`${a.slice(0,chars+2)}...${a.slice(-chars)}`:"";
+export const formatHash=(h,chars=8)=>h?`${h.slice(0,chars)}...${h.slice(-chars)}`:"";
+export const formatNumber=n=>n===null||n===undefined?"0":new Intl.NumberFormat("en-IN").format(n);
+export const formatPct=(n,d=1)=>n||n===0?`${Number(n).toFixed(d)}%`:"0%";
+export const formatDate=d=>d?format(new Date(d),"dd MMM yyyy"):"";
+export const formatDateTime=d=>d?format(new Date(d),"dd MMM yyyy, HH:mm"):"";
+export const formatRelative=d=>d?formatDistanceToNow(new Date(d),{addSuffix:true}):"";
+export const MIN_ELECTION_WINDOW_MS=7*24*60*60*1000;
+export const formatTimeRemaining=endTime=>{if(!endTime)return"Unknown";const end=new Date(endTime);const now=new Date();if(!isAfter(end,now))return"Ended";const diff=end-now;const days=Math.floor(diff/86400000);const hours=Math.floor((diff%86400000)/3600000);const minutes=Math.floor((diff%3600000)/60000);const seconds=Math.floor((diff%60000)/1000);if(days>0)return`${days}d ${hours}h ${minutes}m left`;if(hours>0)return`${hours}h ${minutes}m ${seconds}s left`;return`${minutes}m ${seconds}s left`;};
+export const formatDuration=(startTime,endTime)=>{if(!startTime||!endTime)return"Unknown";const diff=new Date(endTime)-new Date(startTime);if(diff<=0)return"Invalid window";const days=Math.floor(diff/86400000);const hours=Math.floor((diff%86400000)/3600000);const minutes=Math.floor((diff%3600000)/60000);if(days>0)return`${days}d ${hours}h ${minutes}m`;if(hours>0)return`${hours}h ${minutes}m`;return`${minutes}m`;};
+export const isMinimumElectionWindow=(startTime,endTime)=>startTime&&endTime&&new Date(endTime)-new Date(startTime)>=MIN_ELECTION_WINDOW_MS;
+export const getStatusColor=s=>({VERIFIED:"green",ACTIVE:"green",RESULTS_DECLARED:"cyan",PENDING:"yellow",DRAFT:"yellow",REJECTED:"red",BLACKLISTED:"red",PAUSED:"orange",CLOSED:"gray"}[s]||"gray");
+export const truncate=(s,max=50)=>s?s.length>max?s.slice(0,max)+"...":s:"";

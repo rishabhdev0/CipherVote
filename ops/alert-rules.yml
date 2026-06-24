@@ -1,0 +1,26 @@
+groups:
+  - name: ciphervote-production
+    rules:
+      - alert: CipherVoteBackendDown
+        expr: up{job="ciphervote-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: CipherVote backend health endpoint is unavailable.
+
+      - alert: CipherVoteChainHealthFailing
+        expr: up{job="ciphervote-chain-rpc"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: CipherVote chain/RPC health checks are unavailable.
+
+      - alert: CipherVoteEmergencyPauseActive
+        expr: ciphervote_emergency_paused == 1
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: CipherVote emergency pause is active.

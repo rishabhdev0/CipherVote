@@ -1,0 +1,19 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - alert-rules.yml
+
+scrape_configs:
+  - job_name: ciphervote-backend
+    metrics_path: /api/health
+    static_configs:
+      - targets:
+          - backend:5000
+
+  - job_name: ciphervote-chain-rpc
+    metrics_path: /api/health
+    static_configs:
+      - targets:
+          - backend:5000

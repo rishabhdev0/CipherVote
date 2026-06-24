@@ -1,0 +1,3 @@
+import{defineConfig}from"vite";import react from"@vitejs/plugin-react";import path from"path";import{fileURLToPath}from"url";
+const __dirname=path.dirname(fileURLToPath(import.meta.url));
+export default defineConfig({plugins:[react()],optimizeDeps:{exclude:["snarkjs"]},resolve:{alias:{"@":path.resolve(__dirname,"./src")}},build:{target:"esnext",chunkSizeWarningLimit:4000},server:{port:3000,headers:{"Cross-Origin-Opener-Policy":"same-origin","Cross-Origin-Embedder-Policy":"require-corp"},proxy:{"/api":{target:"http://localhost:5000",changeOrigin:true},"/nft":{target:"http://localhost:5000",changeOrigin:true}}}});

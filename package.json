@@ -1,0 +1,13 @@
+{
+  "name": "ciphervote-workspace",
+  "private": true,
+  "scripts": {
+    "static:scan": "node scripts/static-scan.js",
+    "load:vote-spike": "node scripts/load-vote-spike.js",
+    "e2e:smoke": "node scripts/e2e-smoke.js",
+    "test:p2": "npm run static:scan && npm --prefix backend test && npm --prefix blockchain test"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.4"
+  }
+}

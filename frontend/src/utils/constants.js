@@ -1,0 +1,9 @@
+export const API_URL=import.meta.env.VITE_API_URL||"http://localhost:5000/api";
+export const SOCKET_URL=import.meta.env.VITE_SOCKET_URL||"http://localhost:5000";
+export const CHAIN_ID=parseInt(import.meta.env.VITE_CHAIN_ID||"31337");
+export const REQUIRE_ZKP=import.meta.env.VITE_REQUIRE_ZKP==="true"||import.meta.env.PROD;
+export const COLORS={yellow:"#2563eb",red:"#dc2626",cyan:"#00D4FF",green:"#15803d",orange:"#FF8C00"};
+export const VOTER_STATUS={PENDING:"PENDING",VERIFIED:"VERIFIED",REJECTED:"REJECTED",BLACKLISTED:"BLACKLISTED"};
+export const ELECTION_STATUS={DRAFT:"DRAFT",ACTIVE:"ACTIVE",PAUSED:"PAUSED",CLOSED:"CLOSED",RESULTS_DECLARED:"RESULTS_DECLARED"};
+export const NFT_TIER_COLORS={BRONZE:"#CD7F32",SILVER:"#C0C0C0",GOLD:"#2563eb",PLATINUM:"#00D4FF"};
+export const SOCKET_EVENTS={VOTE_CAST:"vote:cast",TALLY_UPDATE:"tally:update",ELECTION_STARTED:"election:started",RESULTS_DECLARED:"results:declared",FRAUD_ALERT:"fraud:alert",VOTER_VERIFIED:"voter:verified",NOTIFICATION:"notification:new"};

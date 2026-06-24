@@ -1,0 +1,80 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install: all packages",
+      "type": "shell",
+      "command": "npm.cmd --prefix backend install; npm.cmd --prefix frontend install; npm.cmd --prefix blockchain install",
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: generate Prisma client",
+      "type": "shell",
+      "command": "npm.cmd --prefix backend run db:gen",
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: push schema",
+      "type": "shell",
+      "command": "npm.cmd --prefix backend run db:push",
+      "problemMatcher": []
+    },
+    {
+      "label": "DB: seed demo data",
+      "type": "shell",
+      "command": "npm.cmd --prefix backend run db:seed",
+      "problemMatcher": []
+    },
+    {
+      "label": "Blockchain: local node",
+      "type": "shell",
+      "command": "npm.cmd --prefix blockchain run node",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Blockchain: deploy local contracts",
+      "type": "shell",
+      "command": "npm.cmd --prefix blockchain run deploy:local",
+      "problemMatcher": []
+    },
+    {
+      "label": "Backend: dev server",
+      "type": "shell",
+      "command": "npm.cmd --prefix backend run dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Frontend: dev server",
+      "type": "shell",
+      "command": "npm.cmd --prefix frontend run dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Check: backend build",
+      "type": "shell",
+      "command": "npm.cmd --prefix backend run build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Check: frontend build",
+      "type": "shell",
+      "command": "npm.cmd --prefix frontend run build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Check: contracts test",
+      "type": "shell",
+      "command": "npm.cmd --prefix blockchain test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Check: all local tests",
+      "type": "shell",
+      "command": "npm.cmd run static:scan; npm.cmd --prefix backend test; npm.cmd --prefix blockchain test; npm.cmd --prefix frontend run build",
+      "problemMatcher": []
+    }
+  ]
+}

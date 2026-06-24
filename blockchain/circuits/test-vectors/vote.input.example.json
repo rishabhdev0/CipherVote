@@ -1,0 +1,12 @@
+{
+  "commitment": "1",
+  "electionId": "1",
+  "maxCandidates": "3",
+  "voterNullifier": "1",
+  "eligibilityRoot": "1",
+  "candidateId": "1",
+  "salt": "1",
+  "voterSecret": "1",
+  "merklePathElements": ["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"],
+  "merklePathIndices": ["0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0","0"]
+}

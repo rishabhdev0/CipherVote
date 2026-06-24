@@ -1,0 +1,613 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  VOTER
+  CANDIDATE
+  SUPER_ADMIN
+  ELECTION_COMMISSION
+  AUDITOR
+  FRAUD_ANALYST
+}
+
+enum VoterStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  BLACKLISTED
+}
+
+enum ElectionStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  CLOSED
+  RESULTS_DECLARED
+}
+
+enum VoteStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+enum DisputeStatus {
+  FILED
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+enum DelegationStatus {
+  ACTIVE
+  REVOKED
+  EXPIRED
+}
+
+enum DocumentType {
+  FACE_IMAGE
+  ID_DOCUMENT
+  DISPUTE_EVIDENCE
+  OTHER
+}
+
+enum IdentityReviewStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  NEEDS_MANUAL_REVIEW
+}
+
+enum GovernanceActionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXECUTED
+  EXPIRED
+}
+
+enum IdentityAppealStatus {
+  FILED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum ElectionVoterSelectionStatus {
+  SELECTED
+  REJECTED
+  REVOKED
+}
+
+enum CandidateApplicationStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  WITHDRAWN
+}
+
+model User {
+  id String @id @default(cuid())
+  email String? @unique
+  phone String? @unique
+  passwordHash String?
+  role UserRole @default(VOTER)
+  walletAddress String? @unique
+  isEmailVerified Boolean @default(false)
+  isPhoneVerified Boolean @default(false)
+  failedLoginAttempts Int @default(0)
+  loginLockedUntil DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  voter Voter?
+  notifications Notification[]
+  auditLogs AuditLog[]
+  refreshSessions RefreshSession[]
+  walletNonces WalletNonce[]
+  otpChallenges OtpChallenge[]
+  uploadedDocuments UploadedDocument[]
+  delegationsGiven Delegation[] @relation("Delegator")
+  delegationsReceived Delegation[] @relation("Delegate")
+  disputesCreated Dispute[] @relation("DisputeCreator")
+  governanceActions GovernanceAction[] @relation("GovernanceProposer")
+  candidateApplications CandidateApplication[]
+}
+model Voter {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields:[userId],references:[id])
+  firstName String
+  lastName String
+  dateOfBirth DateTime
+  age Int?
+  gender String?
+  constituency String
+  voterIdNumber String? @unique
+  walletAddress String? @unique
+  status VoterStatus @default(PENDING)
+  faceVerified Boolean @default(false)
+  idVerified Boolean @default(false)
+  livenessVerified Boolean @default(false)
+  faceMatchScore Float?
+  riskScore Int @default(0)
+  isFlagged Boolean @default(false)
+  flagReason String?
+  isBlacklisted Boolean @default(false)
+  blacklistReason String?
+  blacklistedAt DateTime?
+  nftTokenId String?
+  nftTier String @default("BRONZE")
+  blockchainTxHash String?
+  identityHash String?
+  rejectionReason String?
+  registeredAt DateTime @default(now())
+  verifiedAt DateTime?
+  votes Vote[]
+  uploadedDocuments UploadedDocument[]
+  identityReviews IdentityVerificationReview[]
+  identityAppeals IdentityAppeal[]
+  eligibilityCommitments EligibilityCommitment[]
+  electionSelections ElectionVoterSelection[]
+  delegationsGiven Delegation[] @relation("DelegatingVoter")
+  delegationsReceived Delegation[] @relation("DelegateVoter")
+}
+model Election {
+  id String @id @default(cuid())
+  title String
+  description String?
+  constituency String
+  status ElectionStatus @default(DRAFT)
+  blockchainId Int?
+  startTime DateTime
+  endTime DateTime
+  totalRegistered Int @default(0)
+  totalVotesCast Int @default(0)
+  notaVotes Int @default(0)
+  merkleRoot String?
+  privacyMode String @default("ENCRYPTED_BALLOT")
+  challengeStartsAt DateTime?
+  challengeEndsAt DateTime?
+  certifiedAt DateTime?
+  certifiedById String?
+  certificationNotes String?
+  tallyPublicKey String?
+  blockchainTxHash String?
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  candidates Candidate[]
+  candidateApplications CandidateApplication[]
+  votes Vote[]
+  delegations Delegation[]
+  chainEvents ChainEvent[]
+  voteReceipts VoteReceipt[]
+  encryptedBallots EncryptedBallot[]
+  eligibilityCommitments EligibilityCommitment[]
+  voterSelections ElectionVoterSelection[]
+}
+model Candidate {
+  id String @id @default(cuid())
+  electionId String
+  election Election @relation(fields:[electionId],references:[id])
+  name String
+  party String
+  partyLogoUrl String?
+  constituency String?
+  manifesto String?
+  photoUrl String?
+  blockchainId Int?
+  isActive Boolean @default(true)
+  voteCount Int @default(0)
+  createdAt DateTime @default(now())
+  applicationId String? @unique
+  application CandidateApplication? @relation(fields:[applicationId],references:[id])
+}
+
+model CandidateApplication {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  electionId String?
+  election Election? @relation(fields:[electionId],references:[id])
+  candidateId String?
+  fullName String
+  party String
+  partyLogoUrl String?
+  constituency String
+  manifesto String?
+  contactEmail String?
+  contactPhone String?
+  documentHash String?
+  status CandidateApplicationStatus @default(SUBMITTED)
+  reviewReason String?
+  reviewedById String?
+  reviewedAt DateTime?
+  submittedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  candidate Candidate?
+  @@index([userId,status])
+  @@index([electionId,status])
+  @@index([constituency,status])
+}
+model Vote {
+  id String @id @default(cuid())
+  electionId String
+  election Election @relation(fields:[electionId],references:[id])
+  voterId String
+  voter Voter @relation(fields:[voterId],references:[id])
+  voteHash String? @unique
+  receiptHash String? @unique
+  status VoteStatus @default(PENDING)
+  blockchainTxHash String?
+  blockNumber Int?
+  logIndex Int?
+  chainId Int?
+  confirmations Int?
+  constituency String?
+  zkpVerified Boolean @default(false)
+  castAt DateTime @default(now())
+  confirmedAt DateTime?
+  receipt VoteReceipt?
+  @@unique([voterId, electionId])
+}
+
+model VotePrivacySignal {
+  id String @id @default(cuid())
+  electionId String
+  ipHash String?
+  deviceHash String?
+  userAgentHash String?
+  castAt DateTime @default(now())
+  @@index([electionId])
+  @@index([ipHash,castAt])
+  @@index([deviceHash,castAt])
+}
+
+model VoteReceipt {
+  id String @id @default(cuid())
+  voteId String @unique
+  vote Vote @relation(fields:[voteId],references:[id])
+  electionId String
+  election Election @relation(fields:[electionId],references:[id])
+  publicReceiptHash String @unique
+  blockchainTxHash String?
+  blockNumber Int?
+  logIndex Int?
+  chainId Int?
+  confirmations Int @default(0)
+  finalizedAt DateTime?
+  isCanonical Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@index([electionId])
+  @@index([chainId,blockNumber,logIndex])
+}
+
+model EncryptedBallot {
+  id String @id @default(cuid())
+  electionId String
+  election Election @relation(fields:[electionId],references:[id])
+  ballotCommitment String @unique
+  nullifierHash String @unique
+  encryptedPayload String
+  encryptionScheme String @default("X25519-XSALSA20POLY1305")
+  proofCommitment String?
+  eligibilityRoot String?
+  receiptHash String @unique
+  status VoteStatus @default(CONFIRMED)
+  blockchainTxHash String?
+  blockNumber Int?
+  logIndex Int?
+  chainId Int?
+  confirmations Int @default(0)
+  finalizedAt DateTime?
+  isCanonical Boolean @default(true)
+  createdAt DateTime @default(now())
+  @@index([electionId])
+}
+
+model EligibilityCommitment {
+  id String @id @default(cuid())
+  electionId String
+  election Election @relation(fields:[electionId],references:[id])
+  voterId String
+  voter Voter @relation(fields:[voterId],references:[id])
+  commitment String
+  leaf String
+  merklePath Json?
+  issuedAt DateTime @default(now())
+  revokedAt DateTime?
+  @@unique([electionId,voterId])
+  @@unique([electionId,commitment])
+  @@index([electionId])
+}
+
+model ElectionVoterSelection {
+  id String @id @default(cuid())
+  electionId String
+  election Election @relation(fields:[electionId],references:[id])
+  voterId String
+  voter Voter @relation(fields:[voterId],references:[id])
+  status ElectionVoterSelectionStatus @default(SELECTED)
+  selectedById String?
+  rejectedById String?
+  revokedById String?
+  reason String?
+  selectedAt DateTime @default(now())
+  rejectedAt DateTime?
+  revokedAt DateTime?
+  updatedAt DateTime @updatedAt
+  @@unique([electionId,voterId])
+  @@index([electionId,status])
+  @@index([voterId,status])
+}
+model FraudLog {
+  id String @id @default(cuid())
+  electionId String?
+  voterId String?
+  fraudType String
+  description String
+  severity String @default("MEDIUM")
+  riskScore Int @default(0)
+  ipAddress String?
+  metadata Json?
+  reviewStatus String @default("OPEN")
+  reviewNotes String?
+  reviewedBy String?
+  reviewedAt DateTime?
+  isResolved Boolean @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+  createdAt DateTime @default(now())
+}
+model AuditLog {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields:[userId],references:[id])
+  action String
+  resource String?
+  resourceId String?
+  description String?
+  severity String @default("INFO")
+  ipAddress String?
+  metadata Json?
+  previousHash String?
+  entryHash String? @unique
+  createdAt DateTime @default(now())
+  @@index([entryHash])
+}
+
+model AuditAnchor {
+  id String @id @default(cuid())
+  fromLogId String?
+  toLogId String?
+  rootHash String
+  logCount Int
+  anchoredTxHash String?
+  chainId Int?
+  createdAt DateTime @default(now())
+  @@index([rootHash])
+}
+model Dispute {
+  id String @id @default(cuid())
+  createdById String?
+  createdBy User? @relation("DisputeCreator",fields:[createdById],references:[id])
+  title String
+  description String
+  disputeType String @default("OTHER")
+  status DisputeStatus @default(FILED)
+  isPublic Boolean @default(true)
+  resolution String?
+  actionTaken String?
+  evidenceCount Int @default(0)
+  supportVotes Int @default(0)
+  oppositionVotes Int @default(0)
+  resolvedAt DateTime?
+  createdAt DateTime @default(now())
+  evidence DisputeEvidence[]
+  @@index([createdById])
+}
+
+model SystemState {
+  id String @id @default("global")
+  emergencyPaused Boolean @default(false)
+  pauseReason String?
+  pausedById String?
+  pausedAt DateTime?
+  resumedById String?
+  resumedAt DateTime?
+  chainTxHash String?
+  updatedAt DateTime @updatedAt
+}
+
+model GovernanceAction {
+  id String @id @default(cuid())
+  actionType String
+  resource String
+  resourceId String?
+  payload Json?
+  status GovernanceActionStatus @default(PENDING)
+  proposedById String?
+  proposedBy User? @relation("GovernanceProposer",fields:[proposedById],references:[id])
+  approvals Json?
+  requiredApprovals Int @default(2)
+  notBefore DateTime?
+  executedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([resource,resourceId])
+  @@index([status])
+}
+
+model DisputeEvidence {
+  id String @id @default(cuid())
+  disputeId String
+  dispute Dispute @relation(fields:[disputeId],references:[id])
+  uploadedById String?
+  documentId String?
+  document UploadedDocument? @relation(fields:[documentId],references:[id])
+  description String?
+  hash String?
+  createdAt DateTime @default(now())
+}
+
+model UploadedDocument {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields:[userId],references:[id])
+  voterId String?
+  voter Voter? @relation(fields:[voterId],references:[id])
+  type DocumentType @default(OTHER)
+  storagePath String
+  originalName String?
+  mimeType String?
+  sizeBytes Int?
+  sha256 String
+  encrypted Boolean @default(false)
+  encryptionKeyRef String?
+  createdAt DateTime @default(now())
+  disputeEvidence DisputeEvidence[]
+  @@index([userId])
+  @@index([voterId])
+  @@index([sha256])
+}
+
+model IdentityVerificationReview {
+  id String @id @default(cuid())
+  voterId String
+  voter Voter @relation(fields:[voterId],references:[id])
+  provider String @default("MANUAL")
+  status IdentityReviewStatus @default(PENDING)
+  faceVerified Boolean @default(false)
+  idVerified Boolean @default(false)
+  livenessVerified Boolean @default(false)
+  faceMatchScore Float?
+  riskScore Int @default(0)
+  reviewerId String?
+  decisionReason String?
+  providerReference String?
+  evidence Json?
+  submittedAt DateTime @default(now())
+  reviewedAt DateTime?
+  @@index([voterId,status])
+  @@index([providerReference])
+}
+
+model IdentityAppeal {
+  id String @id @default(cuid())
+  voterId String
+  voter Voter @relation(fields:[voterId],references:[id])
+  filedById String?
+  status IdentityAppealStatus @default(FILED)
+  reason String
+  evidence Json?
+  reviewerId String?
+  decisionReason String?
+  createdAt DateTime @default(now())
+  reviewedAt DateTime?
+  @@index([voterId,status])
+}
+model Notification {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  type String
+  title String
+  message String
+  isRead Boolean @default(false)
+  metadata Json?
+  createdAt DateTime @default(now())
+}
+model WalletNonce {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields:[userId],references:[id])
+  walletAddress String
+  nonceHash String
+  message String
+  purpose String @default("LOGIN")
+  expiresAt DateTime
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([walletAddress])
+}
+model OtpChallenge {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  otpHash String
+  purpose String
+  channel String @default("EMAIL")
+  attempts Int @default(0)
+  maxAttempts Int @default(5)
+  expiresAt DateTime
+  usedAt DateTime?
+  createdAt DateTime @default(now())
+  @@index([userId,purpose])
+}
+model RefreshSession {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId],references:[id])
+  tokenHash String @unique
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  replacedById String?
+  createdAt DateTime @default(now())
+  rotatedAt DateTime?
+}
+
+model Delegation {
+  id String @id @default(cuid())
+  electionId String
+  election Election @relation(fields:[electionId],references:[id])
+  delegatorUserId String
+  delegatorUser User @relation("Delegator",fields:[delegatorUserId],references:[id])
+  delegateUserId String
+  delegateUser User @relation("Delegate",fields:[delegateUserId],references:[id])
+  delegatorVoterId String?
+  delegatorVoter Voter? @relation("DelegatingVoter",fields:[delegatorVoterId],references:[id])
+  delegateVoterId String?
+  delegateVoter Voter? @relation("DelegateVoter",fields:[delegateVoterId],references:[id])
+  status DelegationStatus @default(ACTIVE)
+  reason String?
+  revokedAt DateTime?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  @@unique([electionId,delegatorUserId])
+  @@index([delegateUserId])
+}
+
+model ChainEvent {
+  id String @id @default(cuid())
+  contractName String
+  eventName String
+  electionId String?
+  election Election? @relation(fields:[electionId],references:[id])
+  chainId Int
+  blockNumber Int
+  transactionHash String
+  logIndex Int
+  args Json?
+  processed Boolean @default(false)
+  createdAt DateTime @default(now())
+  @@unique([chainId,transactionHash,logIndex])
+  @@index([contractName,eventName])
+}
+
+model BlockchainSync {
+  id String @id @default(cuid())
+  contractName String @unique
+  lastSyncedBlock Int @default(0)
+  lastSyncedAt DateTime?
+  isSyncing Boolean @default(false)
+  syncErrors Int @default(0)
+}
